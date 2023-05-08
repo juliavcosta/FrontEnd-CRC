@@ -10,8 +10,8 @@ export const Cadastrar = () => {
   const handleSubmit = async (event) => {
     event.preventDefault()
     try {
-          const response = await axios.post("http://localost8080/CriarProfessor", {nome, email, senha})
-          alert(response.data)
+          const response = await axios.post("http://localhost:8080/criarProfessor", {nome, email, senha})
+          console.log(response.data)
     }catch(err){
       console.log(err)
     }
