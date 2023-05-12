@@ -2,6 +2,7 @@ import React, {useState} from 'react'
 import axios from 'axios'
 import {Form, Button } from 'react-bootstrap'
 import { TabelaProfessor } from './TelaProfessor/page/TabelaProfessor';
+import { Navigate } from 'react-router-dom';
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,12 +21,12 @@ export const Login = () => {
     }
   } 
   if(loggedIn) {
-    return <TabelaProfessor />
+    return <Navigate to="/professor/:id" />
   }
   return (
     <div className="d-flex align-items-center justify-content-center" style={{height: "100vh"}}>
       <div className="border rounded p-5"style={{backgroundColor: "#008080", borderRadius:"13px"}}>
-        <Form style={{color: "ffffff", margin:"5px"}} onSubmit={handleLogin}>
+        <Form style={{color: "#ffffff", margin:"5px"}} onSubmit={handleLogin}>
           <h1>Login</h1>
           <Form.Group controlId="formBasicEmail">
             <Form.Label>Email</Form.Label>
