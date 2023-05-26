@@ -1,40 +1,93 @@
-import React, { useState } from 'react'
-import axios from "axios"
-import {Row, Form, Col, Button, Table} from "react-bootstrap"
+import React, { useEffect, useState } from 'react';
+import axios from "axios";
+import {Row, Form, Col, Button, Table} from "react-bootstrap";
+import {FaTrash, FaEdit, FaBan} from "react-icons/fa";
 
 export const TabelaProfessor = () => {
-    const [nome, setNome] = useState("")
-    const [curso, setCurso] = useState("")
-    const [alunos, setAlunos] = useState([])
-    const professorId = 1
+    const [nome, setNome] = useState("");
+    const [curso, setCurso] = useState("");
+    const [alunos, setAlunos] = useState([]);
+
+    const [onEdit, setOnEdit] = useState(null);
+
+    const professorId = parseInt(localStorage.getItem("user-id"));
 
     const handleCadastro = async (event) => {
         event.preventDefault();
         try {
-            const response = await axios.post("http://localhost:8080/criarAluno", {
+            const response = await axios.post(`http://localhost:8080/${professorId}/criarAluno`, {
              nome: nome,
              curso: curso,
              professorId: professorId,
             });
-            alert(response.data)
+            alert("O aluno foi cadastrado");
       }catch(err){
-        console.log(err)
+        console.error(err);
       }
     };
 
     const mostrarAlunos = async () => {
         try {
-            const response = await axios.get(`http://localhost:8080/professor/${professorId}/lisaDeAlunos`);
-            setAlunos(response.data.sort((a,b) => (a.nome) > b.nome ? 1 : -1));
+            const response = await axios.get(`http://localhost:8080/professor/${professorId}/listaDeAlunos`);
+            setAlunos(response.data.sort((a,b) => (a.nome > b.nome ? 1 : -1)));
         } catch (error) {
             console.error(error)
         }
+    };
+
+    useEffect(() => {
+        mostrarAlunos();
+    }, [setAlunos]);
+
+    const editAluno = (id) =>{
+      setOnEdit(id);
+      const aluno = alunos.find((alunos) => alunos.id === id);
+      setNome(aluno.nome);
+      setCurso(aluno.curso);
+    }
+
+    const cancelEdit = () =>{
+      setOnEdit(null);
+      setNome("");
+      setCurso("");
+    }
+
+    const updateAluno = async (id) =>{
+
+      try {
+        await axios.put(`http://localhost:8080/${professorId}/alunos/${id}`,
+        { nome:nome,
+        curso: curso
+        });
+        setOnEdit(null);
+        setNome("");
+        setCurso("");
+        mostrarAlunos();
+      } catch (err) {
+        console.error(err);
+      }
+
+      
+    }
+    
+    const deleteAluno = (id) =>{
+       axios.delete(`http://localhost:8080/${professorId}/alunos/${id}`);
+       setAlunos(alunos.filter(alunos => alunos.id !== id))
     }
   return (
-    <div className="d-grid align-items-center justify-content-center" style={{ height: "100vh" }}>
-        <div className="border rounded p-5" style={{backgroundColor: "#008080", borderRadius:"25px"}}>
-            <Form style={{color: "#FFFFFF", margin: "5px"}}>
-                <h4>Cadastrar Aluno</h4>
+    <div 
+    className="d-grid align-items-center justify-content-center" 
+    style={{ height: "100vh" }}
+    >
+        <div 
+        className="border rounded p-5" 
+        style={{backgroundColor: "#008080", borderRadius:"25px"}}
+        >
+            <Form 
+            style={{color: "#FFFFFF", margin: "5px"}}
+            onSubmit={onEdit !== null ? () => updateAluno(onEdit) : handleCadastro}
+            >
+                <h4>{onEdit !== null ? "Editar Aluno" : "Cadastrar Aluno"}</h4>
                 <Row className="d-flex align-items-center flex-wrap">
                   <Col xs="auto">
                     <Form.Group controlId="formBasicText">
@@ -56,48 +109,66 @@ export const TabelaProfessor = () => {
                         }}
                         type="submit"
                         >
-                            Cadastrar
+                            {onEdit !== null ? "Atualizar" : "Cadastrar"}
                     </Button>
+                    {onEdit !== null && (
+                      <Button
+                      variant="secondary"
+                      style={{
+                        backgroundColor: "#5F9EA0",
+                        borderColor: "#5F9EA0",
+                        marginTop: "10px",
+                        marginLeft: "10px",
+                      }}
+                      onClick={cancelEdit}
+                      >
+                        Cancelar
+                      </Button>
+                    )}
                    </Col>
                 </Row>
             </Form>
         </div>
 
 <div>
-    <Table
+  <Table
     striped
-    border
+    border="true"
     hover
     className="border rounded p-5"
     size="md"
     style={{backgroundColor: "#FFFFFF"}}
-    >
+   >
         <thead>
             <tr>
-                <th>Nome</th>
-                <th>Sobrenome</th>
-                <th>Idade</th>
+              <th>Nome</th>
+              <th>Curso</th>
+              <th></th>
+              <th></th>
             </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>João</td>
-                <td>Silva</td>
-                <td>30</td>
-            </tr>
-            <tr>
-                <td>Maria</td>
-                <td>Santos</td>
-                <td>25</td>
-            </tr>
-            <tr>
-                <td>Lucas</td>
-                <td>Oliveira</td>
-                <td>18</td>
-            </tr>
-        </tbody>
-    </Table>
+          </thead>
+          <tbody>
+            {alunos.map((item) => {
+                return(
+                <tr key={item.id}>
+                  <td width="30%" >{item.nome}</td>
+                  <td width ="30%" >{item.curso}</td>
+                  <td align="center" style={{width: "5%"}}>
+                    { onEdit === item.id ? (
+                      <FaBan onClick={() => cancelEdit(item.id)}/>
+                    ) : (
+                      <FaEdit onClick={() => editAluno(item.id)}/>
+                    )}
+                  </td>
+                  <td align="center" style={{width: "5%"}}>
+                    <FaTrash onClick={() => deleteAluno(item.id)}/>
+                  </td>
+                </tr>
+                )
+            })}
+          </tbody>
+        </Table>
+      </div>
     </div>
-    </div>
-  )
-}
+  );
+};

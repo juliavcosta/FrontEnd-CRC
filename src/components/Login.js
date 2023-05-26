@@ -8,18 +8,28 @@ export const Login = () => {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
   const [loggedIn, setLoggedIn] = useState(false);
+  const [error, setError] = useState("")
 
   const handleLogin = async (event) => {
     event.preventDefault();
     try {
       const response = await axios.post("http://localhost:8080/loginProfessor", {email, senha});
-      const token = response.data.acessToken;
-      localStorage.setItem("token", token);
-      setLoggedIn(true)
+      const data = response.data
+      if(data.error){
+        setError(data.error);
+      } else {
+        const accessToken = data.accessToken;
+        const userId = data.id;
+        setLoggedIn(true);
+        localStorage.setItem("access-token", accessToken);
+        localStorage.setItem("user-id", userId);
+      }
     } catch (error) {
-      console.error(error)
+      console.error(error);
+      setError("Ocorreu um erro durante o login");
     }
-  } 
+  };
+
   if(loggedIn) {
     return <Navigate to="/professor/:id" />
   }
@@ -40,6 +50,7 @@ export const Login = () => {
           <Button type="submit" style={{backgroundColor: "#5F9EA0", borderColor: "#5F9EA0", marginTop: "10px"}}>
                   Entrar
           </Button>
+          {error && <p>{error}</p>}
         </Form>
         
       </div>
